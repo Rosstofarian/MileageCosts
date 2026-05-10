@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Per Mile — UK Fuel Cost Calculator</title>
+  <meta name="description" content="Work out exactly how much each mile costs to drive. UK fuel calculator — converts litres and MPG into a simple cost per mile." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f3ef;
+      color: #1a1a1a;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    input:focus {
+      outline: none;
+      border-color: #2a5f4f !important;
+      box-shadow: 0 0 0 3px rgba(42,95,79,0.12) !important;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Layout ── */
+    header {
+      background: #2a5f4f;
+      padding: 20px 20px 22px;
+    }
+    .header-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo-mark { font-size: 28px; line-height: 1; }
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      font-weight: 400;
+      color: #fff;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+    }
+    .app-subtitle {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      margin-top: 2px;
+      font-weight: 300;
+    }
+
+    main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Cards ── */
+    .card, .explainer-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .explainer-card { gap: 10px; }
+
+    /* ── Saved banner ── */
+    .saved-banner {
+      background: #e8f4f0;
+      border: 1px solid #b8ddd4;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #2a5f4f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+    .saved-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #2a5f4f;
+      flex-shrink: 0;
+    }
+    .clear-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: #2a5f4f;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      font-family: inherit;
+    }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    /* ── Fuel type buttons ── */
+    .fuel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .fuel-btn {
+      padding: 10px 8px;
+      border-radius: 8px;
+      border: 1.5px solid #e0ddd8;
+      background: #fafaf8;
+      font-size: 14px;
+      font-weight: 500;
+      color: #555;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+    .fuel-btn.active {
+      background: #2a5f4f;
+      border-color: #2a5f4f;
+      color: #fff;
+    }
+
+    /* ── Fields ── */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+    }
+    .input-wrap {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid #e0ddd8;
+      border-radius: 9px;
+      overflow: hidden;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .input-wrap input {
+      flex: 1;
+      border: none;
+      padding: 12px 14px;
+      font-size: 17px;
+      font-family: inherit;
+      background: transparent;
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+    .input-suffix {
+      padding: 0 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #aaa;
+      background: #fafaf8;
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      border-left: 1.5px solid #e0ddd8;
+      white-space: nowrap;
+    }
+    .hint {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.5;
+      margin-top: 2px;
+    }
+
+    /* ── Save button ── */
+    .save-btn {
+      background: #f0f7f4;
+      border: 1.5px solid #b8ddd4;
+      border-radius: 9px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2a5f4f;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-align: center;
+      display: none;
+    }
+    .save-btn.visible { display: block; }
+    .save-btn.saved-state {
+      background: #2a5f4f;
+      border-color: #2a5f4f;
+      color: #fff;
+    }
+
+    /* ── Result card ── */
+    .result-card {
+      background: #2a5f4f;
+      border-radius: 14px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 4px 20px rgba(42,95,79,0.25);
+      display: none;
+      flex-direction: column;
+      animation: fadeUp 0.35s ease forwards;
+    }
+    .result-card.visible { display: flex; }
+    .result-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+    }
+    .result-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 56px;
+      color: #fff;
+      line-height: 1.1;
+      margin-top: 4px;
+      letter-spacing: -1px;
+    }
+    .result-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.65);
+      margin-top: 6px;
+    }
+    .result-divider {
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+      margin: 18px 0 16px;
+    }
+    .quick-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.1);
+      border-radius: 9px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.55);
+      font-weight: 500;
+    }
+    .stat-value {
+      font-size: 22px;
+      font-family: 'DM Serif Display', serif;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    /* ── Trip estimator ── */
+    .trip-result {
+      background: #f5f3ef;
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 2px;
+      display: none;
+    }
+    .trip-result.visible { display: block; }
+    .trip-label {
+      font-size: 12px;
+      color: #888;
+      font-weight: 500;
+    }
+    .trip-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      color: #2a5f4f;
+      letter-spacing: -0.5px;
+      margin-top: 2px;
+    }
+    .trip-hint { display: block; }
+    .trip-hint.hidden { display: none; }
+
+    /* ── Explainer ── */
+    .explainer-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: #1a1a1a;
+    }
+    .explainer-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.65;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #bbb;
+      padding: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-mark">⛽</div>
+    <div>
+      <h1>Per Mile</h1>
+      <p class="app-subtitle">UK fuel cost calculator</p>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Saved banner -->
+  <div class="saved-banner" id="savedBanner" style="display:none;">
+    <span class="saved-dot"></span>
+    Your vehicle details are saved
+    <button class="clear-btn" onclick="handleClear()">Clear</button>
+  </div>
+
+  <!-- How this works -->
+  <section class="explainer-card">
+    <h2 class="explainer-title">How this works</h2>
+    <p class="explainer-text">
+      In the UK we buy fuel in <strong>litres</strong> but measure economy in <strong>miles per gallon</strong> — different units, which makes it tricky to know your true cost per mile.
+    </p>
+    <p class="explainer-text">
+      This app converts your MPG to litres-per-mile automatically (1 UK gallon = 4.546 litres), then multiplies by your fuel price to give you a real pence-per-mile figure.
+    </p>
+  </section>
+
+  <!-- Fuel type selector -->
+  <section class="card">
+    <span class="section-label">Fuel type</span>
+    <div class="fuel-grid">
+      <button class="fuel-btn active" onclick="setFuelType('petrol', this)">Petrol</button>
+      <button class="fuel-btn"        onclick="setFuelType('diesel', this)">Diesel</button>
+      <button class="fuel-btn"        onclick="setFuelType('electric', this)">Electric</button>
+      <button class="fuel-btn"        onclick="setFuelType('hybrid', this)">Hybrid</button>
+    </div>
+  </section>
+
+  <!-- Vehicle inputs -->
+  <section class="card">
+    <span class="section-label">Your vehicle</span>
+
+    <!-- Fuel price -->
+    <div class="field-group">
+      <label class="field-label" id="fuelPriceLabel">Price per litre (p)</label>
+      <div class="input-wrap">
+        <input type="number" inputmode="decimal" id="fuelPriceInput"
+               placeholder="e.g. 148" oninput="recalculate()" />
+        <span class="input-suffix" id="fuelPriceSuffix">p/litre</span>
+      </div>
+      <p class="hint" id="fuelPriceHint">Check the forecourt sign or a fuel price app</p>
+    </div>
+
+    <!-- MPG (petrol/diesel/hybrid) -->
+    <div class="field-group" id="mpgGroup">
+      <label class="field-label">Real-world fuel economy (MPG)</label>
+      <div class="input-wrap">
+        <input type="number" inputmode="decimal" id="mpgInput"
+               placeholder="e.g. 45" oninput="recalculate()" />
+        <span class="input-suffix">MPG</span>
+      </div>
+      <p class="hint">Use the figure your dashboard or trip computer shows — not the manufacturer's official figure</p>
+    </div>
+
+    <!-- Miles per kWh (electric only) -->
+    <div class="field-group" id="kwGroup" style="display:none;">
+      <label class="field-label">Real-world efficiency (miles per kWh)</label>
+      <div class="input-wrap">
+        <input type="number" inputmode="decimal" id="kwInput"
+               placeholder="e.g. 3.5" oninput="recalculate()" />
+        <span class="input-suffix">mi/kWh</span>
+      </div>
+      <p class="hint">Your car's dashboard or trip computer will show this</p>
+    </div>
+
+    <button class="save-btn" id="saveBtn" onclick="handleSave()">Save my vehicle details</button>
+  </section>
+
+  <!-- Result card -->
+  <section class="result-card" id="resultCard">
+    <p class="result-label">Cost per mile</p>
+    <p class="result-value" id="costPerMile">—</p>
+    <p class="result-sub" id="costPerMileSub"></p>
+    <div class="result-divider"></div>
+    <div class="quick-stats">
+      <div class="stat-box">
+        <span class="stat-label">Per 10 miles</span>
+        <span class="stat-value" id="per10">—</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">Per 100 miles</span>
+        <span class="stat-value" id="per100">—</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Journey estimator -->
+  <section class="card">
+    <span class="section-label">Journey cost estimator</span>
+    <div class="field-group">
+      <label class="field-label">Journey distance (miles)</label>
+      <div class="input-wrap">
+        <input type="number" inputmode="decimal" id="distanceInput"
+               placeholder="e.g. 150" oninput="recalculate()" />
+        <span class="input-suffix">miles</span>
+      </div>
+    </div>
+    <p class="hint trip-hint" id="tripHint">Enter your vehicle details above first</p>
+    <div class="trip-result" id="tripResult">
+      <p class="trip-label" id="tripLabel">Fuel cost</p>
+      <p class="trip-value" id="tripValue">—</p>
+    </div>
+  </section>
+
+  <footer>
+    Fuel prices change — update your price regularly for accurate results.
+  </footer>
+
+</main>
+
+<script>
+  const STORAGE_KEY = 'fuel_calc_vehicle';
+
+  const FUEL_META = {
+    petrol:   { priceLabel: 'Price per litre (p)', priceSuffix: 'p/litre', priceHint: 'Check the forecourt sign or a fuel price app', placeholder: 'e.g. 148' },
+    diesel:   { priceLabel: 'Price per litre (p)', priceSuffix: 'p/litre', priceHint: 'Check the forecourt sign or a fuel price app', placeholder: 'e.g. 152' },
+    electric: { priceLabel: 'Price per kWh (p)',   priceSuffix: 'p/kWh',   priceHint: 'Check your electricity tariff or EV tariff rate', placeholder: 'e.g. 25' },
+    hybrid:   { priceLabel: 'Price per litre (p)', priceSuffix: 'p/litre', priceHint: 'Check the forecourt sign or a fuel price app', placeholder: 'e.g. 148' },
+  };
+
+  let currentFuelType = 'petrol';
+  let costPerMilePence = null;
+
+  // ── Formatting ──────────────────────────────────────────────────
+  function formatPence(p) {
+    if (p === null || isNaN(p)) return '—';
+    if (p >= 100) return '£' + (p / 100).toFixed(2);
+    return p.toFixed(1) + 'p';
+  }
+  function formatPound(p) {
+    if (p === null || isNaN(p)) return '—';
+    return '£' + (p / 100).toFixed(2);
+  }
+
+  // ── Fuel type switching ─────────────────────────────────────────
+  function setFuelType(type, btn) {
+    currentFuelType = type;
+    document.querySelectorAll('.fuel-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const meta = FUEL_META[type];
+    document.getElementById('fuelPriceLabel').textContent  = meta.priceLabel;
+    document.getElementById('fuelPriceSuffix').textContent = meta.priceSuffix;
+    document.getElementById('fuelPriceHint').textContent   = meta.priceHint;
+    document.getElementById('fuelPriceInput').placeholder  = meta.placeholder;
+
+    const isElectric = type === 'electric';
+    document.getElementById('mpgGroup').style.display = isElectric ? 'none' : 'flex';
+    document.getElementById('kwGroup').style.display  = isElectric ? 'flex' : 'none';
+
+    recalculate();
+  }
+
+  // ── Core calculation ────────────────────────────────────────────
+  function recalculate() {
+    const fuelPrice = parseFloat(document.getElementById('fuelPriceInput').value);
+    const isElectric = currentFuelType === 'electric';
+
+    let cpm = null;
+
+    if (fuelPrice > 0) {
+      if (isElectric) {
+        const mpkwh = parseFloat(document.getElementById('kwInput').value);
+        if (mpkwh > 0) cpm = fuelPrice / mpkwh;
+      } else {
+        const mpg = parseFloat(document.getElementById('mpgInput').value);
+        if (mpg > 0) {
+          const litresPerMile = 4.54609 / mpg;
+          cpm = litresPerMile * fuelPrice;
+        }
+      }
+    }
+
+    costPerMilePence = cpm;
+    updateResultCard(cpm);
+    updateTripResult(cpm);
+    updateSaveButton();
+  }
+
+  function updateResultCard(cpm) {
+    const card = document.getElementById('resultCard');
+    if (cpm === null) {
+      card.classList.remove('visible');
+      return;
+    }
+    card.classList.add('visible');
+    document.getElementById('costPerMile').textContent = formatPence(cpm);
+    document.getElementById('costPerMileSub').textContent = 'Every mile you drive costs you ' + formatPence(cpm);
+    document.getElementById('per10').textContent  = formatPound(cpm * 10);
+    document.getElementById('per100').textContent = formatPound(cpm * 100);
+  }
+
+  function updateTripResult(cpm) {
+    const dist = parseFloat(document.getElementById('distanceInput').value);
+    const hint   = document.getElementById('tripHint');
+    const result = document.getElementById('tripResult');
+
+    if (cpm !== null && dist > 0) {
+      hint.classList.add('hidden');
+      result.classList.add('visible');
+      document.getElementById('tripLabel').textContent = 'Fuel cost for ' + dist + ' miles';
+      document.getElementById('tripValue').textContent = formatPound(cpm * dist);
+    } else {
+      hint.classList.remove('hidden');
+      result.classList.remove('visible');
+      hint.textContent = cpm === null
+        ? 'Enter your vehicle details above first'
+        : 'Enter a distance to estimate your journey cost';
+    }
+  }
+
+  // ── Save / Clear ────────────────────────────────────────────────
+  function updateSaveButton() {
+    const btn = document.getElementById('saveBtn');
+    const fuelPrice   = document.getElementById('fuelPriceInput').value;
+    const mpg         = document.getElementById('mpgInput').value;
+    const kw          = document.getElementById('kwInput').value;
+    const isElectric  = currentFuelType === 'electric';
+    const efficiencyOk = isElectric ? kw !== '' : mpg !== '';
+    const canSave = fuelPrice !== '' && efficiencyOk;
+    btn.classList.toggle('visible', canSave);
+  }
+
+  function handleSave() {
+    const btn = document.getElementById('saveBtn');
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        fuelType:    currentFuelType,
+        fuelPrice:   document.getElementById('fuelPriceInput').value,
+        mpg:         document.getElementById('mpgInput').value,
+        milesPerKwh: document.getElementById('kwInput').value,
+      }));
+      document.getElementById('savedBanner').style.display = 'flex';
+      btn.textContent = '✓ Saved';
+      btn.classList.add('saved-state');
+      setTimeout(() => {
+        btn.textContent = 'Update saved details';
+        btn.classList.remove('saved-state');
+      }, 2000);
+    } catch(e) {}
+  }
+
+  function handleClear() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
+    document.getElementById('savedBanner').style.display = 'none';
+    document.getElementById('fuelPriceInput').value = '';
+    document.getElementById('mpgInput').value = '';
+    document.getElementById('kwInput').value = '';
+    document.getElementById('distanceInput').value = '';
+    // Reset to petrol
+    document.querySelectorAll('.fuel-btn')[0].click();
+    recalculate();
+  }
+
+  // ── Load saved data on startup ──────────────────────────────────
+  (function loadSaved() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const v = JSON.parse(raw);
+
+      // Set fuel type button
+      const btnMap = { petrol: 0, diesel: 1, electric: 2, hybrid: 3 };
+      const btnIndex = btnMap[v.fuelType] ?? 0;
+      const btn = document.querySelectorAll('.fuel-btn')[btnIndex];
+      setFuelType(v.fuelType || 'petrol', btn);
+
+      document.getElementById('fuelPriceInput').value = v.fuelPrice || '';
+      document.getElementById('mpgInput').value       = v.mpg || '';
+      document.getElementById('kwInput').value        = v.milesPerKwh || '';
+
+      document.getElementById('savedBanner').style.display = 'flex';
+      document.getElementById('saveBtn').textContent = 'Update saved details';
+
+      recalculate();
+    } catch(e) {}
+  })();
+</script>
+
+</body>
+</html>
